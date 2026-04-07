@@ -708,7 +708,27 @@ img {
 .container {
   overflow-x: hidden;
 }
-  </style>
+  
+/* Form feedback */
+.form-success {
+  display: none;
+  margin-top: 1rem;
+  padding: .9rem 1rem;
+  border-radius: .9rem;
+  border: 1px solid rgba(34,197,94,.25);
+  background: rgba(34,197,94,.10);
+  color: #22c55e;
+  font-size: .95rem;
+  font-weight: 700;
+  animation: fadeUp .4s ease;
+}
+.form-success.show { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+</style>
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -1149,30 +1169,31 @@ img {
                 <div class="space-y-2">
                   <label for="nome" class="ml-1 text-xs font-bold uppercase tracking-[0.18em] opacity-60">Nome completo</label>
                   <input type="text" id="nome" required placeholder="Seu nome" class="w-full rounded-xl border border-zinc-200 bg-white px-5 py-4 text-black transition-all focus:outline-none focus:ring-2 focus:ring-orange-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
-                  <span id="nome-error" class="field-error">Informe seu nome completo.</span>
+                  <span id="nome-error" class="field-error">Informe nome e sobrenome válidos.Informe seu nome completo.</span>
                 </div>
                 <div class="space-y-2">
                   <label for="telefone" class="ml-1 text-xs font-bold uppercase tracking-[0.18em] opacity-60">Telefone</label>
                   <input type="tel" id="telefone" required placeholder="(43) 99999-9999" class="w-full rounded-xl border border-zinc-200 bg-white px-5 py-4 text-black transition-all focus:outline-none focus:ring-2 focus:ring-orange-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
-                  <span id="telefone-error" class="field-error">Informe um telefone válido.</span>
+                  <span id="telefone-error" class="field-error">Informe um telefone válido com DDD.Informe um telefone válido.</span>
                 </div>
               </div>
 
               <div class="space-y-2">
                 <label for="email" class="ml-1 text-xs font-bold uppercase tracking-[0.18em] opacity-60">E-mail</label>
                 <input type="email" id="email" required placeholder="seu@email.com" class="w-full rounded-xl border border-zinc-200 bg-white px-5 py-4 text-black transition-all focus:outline-none focus:ring-2 focus:ring-orange-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
-                <span id="email-error" class="field-error">Informe um e-mail válido.</span>
+                <span id="email-error" class="field-error">Informe um e-mail válido.Informe um e-mail válido.</span>
               </div>
 
               <div class="space-y-2">
                 <label for="mensagem" class="ml-1 text-xs font-bold uppercase tracking-[0.18em] opacity-60">Mensagem</label>
                 <textarea id="mensagem" required rows="4" placeholder="Como podemos ajudar em sua obra?" class="w-full resize-none rounded-xl border border-zinc-200 bg-white px-5 py-4 text-black transition-all focus:outline-none focus:ring-2 focus:ring-orange-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"></textarea>
-                <span id="mensagem-error" class="field-error">Descreva sua necessidade com mais detalhes.</span>
+                <span id="mensagem-error" class="field-error">A mensagem deve ter no mínimo 10 caracteres.Descreva sua necessidade com mais detalhes.</span>
               </div>
 
               <button type="submit" id="submit-btn" class="flex w-full items-center justify-center gap-3 rounded-xl bg-orange-600 py-5 text-sm font-black uppercase tracking-[0.18em] text-white shadow-glow transition-all hover:bg-orange-700">
                 Enviar via WhatsApp <i data-lucide="send" class="h-5 w-5"></i>
               </button>
+              <p id="form-success" class="form-success">✔ Solicitação enviada com sucesso!</p>
 
               
             </form>
@@ -1444,58 +1465,83 @@ img {
 
     document.getElementById('contact-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
+
+      const form = document.getElementById('contact-form');
       const nome = document.getElementById('nome');
       const telefone = document.getElementById('telefone');
       const email = document.getElementById('email');
       const mensagem = document.getElementById('mensagem');
+      const successMsg = document.getElementById('form-success');
 
       const nomeError = document.getElementById('nome-error');
       const telefoneError = document.getElementById('telefone-error');
       const emailError = document.getElementById('email-error');
       const mensagemError = document.getElementById('mensagem-error');
 
-      [nome, telefone, email, mensagem].forEach(el => el.classList.remove('input-invalid'));
-      [nomeError, telefoneError, emailError, mensagemError].forEach(el => el.classList.remove('show'));
+      const nomeRegex = /^[A-Za-zÀ-ÿ]+(\s[A-Za-zÀ-ÿ]+)+$/;
+      const telefoneRegex = /^(\(?\d{2}\)?\s?)?(9?\d{4})-?\d{4}$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      const mensagemRegex = /^.{10,}$/s;
+
+      [nome, telefone, email, mensagem].forEach(el => el?.classList.remove('input-invalid'));
+      [nomeError, telefoneError, emailError, mensagemError].forEach(el => el?.classList.remove('show'));
+      successMsg?.classList.remove('show');
 
       let valid = true;
 
-      if (nome.value.trim().length < 5) {
+      if (!nomeRegex.test(nome.value.trim())) {
         nome.classList.add('input-invalid');
-        nomeError.classList.add('show');
+        nomeError?.classList.add('show');
         valid = false;
       }
 
-      const phoneDigits = telefone.value.replace(/\D/g, '');
-      if (phoneDigits.length < 10) {
+      if (!telefoneRegex.test(telefone.value.trim())) {
         telefone.classList.add('input-invalid');
-        telefoneError.classList.add('show');
+        telefoneError?.classList.add('show');
         valid = false;
       }
 
-      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email.value.trim());
-      if (!emailOk) {
+      if (!emailRegex.test(email.value.trim())) {
         email.classList.add('input-invalid');
-        emailError.classList.add('show');
+        emailError?.classList.add('show');
         valid = false;
       }
 
-      if (mensagem.value.trim().length < 10) {
+      if (!mensagemRegex.test(mensagem.value.trim())) {
         mensagem.classList.add('input-invalid');
-        mensagemError.classList.add('show');
+        mensagemError?.classList.add('show');
         valid = false;
       }
 
       if (!valid) return;
 
+      successMsg?.classList.add('show');
+
       const text = `*Novo Orçamento Terraplat*\n\n*Nome:* ${nome.value.trim()}\n*Telefone:* ${telefone.value.trim()}\n*E-mail:* ${email.value.trim()}\n*Mensagem:* ${mensagem.value.trim()}`;
-      window.open(`https://wa.me/5543999597075?text=${encodeURIComponent(text)}`, '_blank');
+
+      setTimeout(() => {
+        window.open(`https://wa.me/5543999597075?text=${encodeURIComponent(text)}`, '_blank');
+      }, 600);
+
+      setTimeout(() => {
+        form?.reset();
+      }, 800);
     });
 
     ['nome','telefone','email','mensagem'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => {
-        document.getElementById(id).classList.remove('input-invalid');
+        document.getElementById(id)?.classList.remove('input-invalid');
         document.getElementById(id + '-error')?.classList.remove('show');
       });
+    });
+
+    document.getElementById('telefone')?.addEventListener('input', (e) => {
+      const el = e.target;
+      el.value = el.value
+        .replace(/\D/g, '')
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4,5})(\d{4})$/, '$1-$2')
+        .slice(0, 15);
     });
 
     document.getElementById('back-to-top')?.addEventListener('click', () => {
